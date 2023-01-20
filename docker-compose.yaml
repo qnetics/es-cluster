@@ -1,0 +1,100 @@
+version: '3.7'
+
+services:
+
+  # elasticsearch node 1
+  elasticsearch_node1:
+    container_name: elasticsearch_node1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "./config/cluster1.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - elasticsearch-volume-node1:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9201
+    networks:
+      - elacticsearch_cluster
+
+
+  # elasticsearch node 2
+  elasticsearch_node2:
+    container_name: elasticsearch_node2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "./config/cluster2.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - elasticsearch-volume-node2:/usr/share/elasticsearch/data
+    ports:
+      - 9202:9202
+    networks:
+      - elacticsearch_cluster
+
+    
+  # elasticsearch node 3
+  elasticsearch_node3:
+    container_name: elasticsearch_node3
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    restart: always
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "./config/cluster3.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - elasticsearch-volume-node3:/usr/share/elasticsearch/data
+    ports:
+      - 9203:9203
+    networks:
+      - elacticsearch_cluster
+
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.4.0
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elacticsearch_cluster:9201
+    ports:
+      - 5601:5601
+    # depends_on:
+    #   - elasticsearch
+    networks:
+      - elacticsearch_cluster
+
+volumes:
+
+  elasticsearch-volume-node1:
+    driver: local
+
+  elasticsearch-volume-node2:
+    driver: local
+
+  elasticsearch-volume-node3:
+    driver: local
+
+networks:
+  elacticsearch_cluster:
+    name: elacticsearch_cluster
