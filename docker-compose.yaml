@@ -21,8 +21,10 @@ services:
       - elasticsearch-volume-node1:/usr/share/elasticsearch/data
     ports:
       - 9201:9201
-    networks:
-      - elacticsearch_cluster
+    depends_on:
+      - elasticsearch_node1
+      - elasticsearch_node2
+      - elasticsearch_node3
 
 
   # elasticsearch node 2
@@ -46,7 +48,10 @@ services:
       - 9202:9202
     networks:
       - elacticsearch_cluster
-
+    depends_on:
+      - elasticsearch_node1
+      - elasticsearch_node2
+      - elasticsearch_node3
     
   # elasticsearch node 3
   elasticsearch_node3:
@@ -67,8 +72,12 @@ services:
       - elasticsearch-volume-node3:/usr/share/elasticsearch/data
     ports:
       - 9203:9203
-    networks:
-      - elacticsearch_cluster
+    depends_on:
+      - elasticsearch_node1
+      - elasticsearch_node2
+      - elasticsearch_node3
+    # networks:
+    #   - elacticsearch_cluster
 
 
   kibana:
@@ -76,13 +85,13 @@ services:
     image: docker.elastic.co/kibana/kibana:7.4.0
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://elacticsearch_cluster:9201
+      - ELASTICSEARCH_HOSTS=http://elasticsearch_node1:9201
     ports:
       - 5601:5601
-    # depends_on:
-    #   - elasticsearch
-    networks:
-      - elacticsearch_cluster
+    depends_on:
+      - elasticsearch_node1
+    # networks:
+    #   - elacticsearch_cluster
 
 volumes:
 
@@ -95,6 +104,6 @@ volumes:
   elasticsearch-volume-node3:
     driver: local
 
-networks:
-  elacticsearch_cluster:
-    name: elacticsearch_cluster
+# networks:
+#   elacticsearch_cluster:
+#     name: elacticsearch_cluster
