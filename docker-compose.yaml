@@ -6,6 +6,12 @@ services:
   elasticsearch_node1:
     container_name: elasticsearch_node1
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    environment:
+      - node.name=elasticsearch_node1
+      - cluster.name=docker-cluster
+      - discovery.seed_hosts=elasticsearch_node2,elasticsearch_node3
+      - cluster.initial_master_nodes=elasticsearch_node1,elasticsearch_node2,elasticsearch_node3
+      - xpack.security.enabled=false
     restart: always
     ulimits:
       memlock:
@@ -17,20 +23,23 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - "./config/cluster1.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
       - elasticsearch-volume-node1:/usr/share/elasticsearch/data
     ports:
-      - 9201:9201
-    depends_on:
-      - elasticsearch_node1
-      - elasticsearch_node2
-      - elasticsearch_node3
+      - 9200:9200
+    networks:
+      - elacticsearch_cluster
 
 
   # elasticsearch node 2
   elasticsearch_node2:
     container_name: elasticsearch_node2
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    environment:
+      - node.name=elasticsearch_node2
+      - cluster.name=docker-cluster
+      - discovery.seed_hosts=elasticsearch_node1,elasticsearch_node3
+      - cluster.initial_master_nodes=elasticsearch_node1,elasticsearch_node2,elasticsearch_node3
+      - xpack.security.enabled=false
     restart: always
     ulimits:
       memlock:
@@ -42,21 +51,21 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - "./config/cluster2.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
       - elasticsearch-volume-node2:/usr/share/elasticsearch/data
-    ports:
-      - 9202:9202
     networks:
       - elacticsearch_cluster
-    depends_on:
-      - elasticsearch_node1
-      - elasticsearch_node2
-      - elasticsearch_node3
+
     
   # elasticsearch node 3
   elasticsearch_node3:
     container_name: elasticsearch_node3
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    environment:
+      - node.name=elasticsearch_node3
+      - cluster.name=docker-cluster
+      - discovery.seed_hosts=elasticsearch_node1,elasticsearch_node2
+      - cluster.initial_master_nodes=elasticsearch_node1,elasticsearch_node2,elasticsearch_node3
+      - xpack.security.enabled=false
     restart: always
     ulimits:
       memlock:
@@ -68,16 +77,9 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - "./config/cluster3.yaml:/usr/share/elasticsearch/config/elasticsearch.yml"
       - elasticsearch-volume-node3:/usr/share/elasticsearch/data
-    ports:
-      - 9203:9203
-    depends_on:
-      - elasticsearch_node1
-      - elasticsearch_node2
-      - elasticsearch_node3
-    # networks:
-    #   - elacticsearch_cluster
+    networks:
+      - elacticsearch_cluster
 
 
   kibana:
@@ -85,13 +87,12 @@ services:
     image: docker.elastic.co/kibana/kibana:7.4.0
     restart: always
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch_node1:9201
+      ELASTICSEARCH_URL: http://elasticsearch_node1:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch_node1:9200","http://elasticsearch_node2:9200","http://elasticsearch_node3:9200"]'
     ports:
       - 5601:5601
-    depends_on:
-      - elasticsearch_node1
-    # networks:
-    #   - elacticsearch_cluster
+    networks:
+      - elacticsearch_cluster
 
 volumes:
 
@@ -104,6 +105,6 @@ volumes:
   elasticsearch-volume-node3:
     driver: local
 
-# networks:
-#   elacticsearch_cluster:
-#     name: elacticsearch_cluster
+networks:
+  elacticsearch_cluster:
+    driver: bridge
